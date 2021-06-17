@@ -1,7 +1,9 @@
 #include <iostream>
+#include <tuple>
 #include <vector>
+#define tii tuple<int,int,int,int>
+const int N=100000000;
 using namespace std;
-const int N = 100000;
 int n;
 int my_abs(int a){
 	return (a>0)?a:-a;
@@ -10,6 +12,12 @@ struct four{
 	int a,b,c,d;
 	bool ok;
 	four():a(0),b(0),c(0),d(0){}
+	four(tii t){
+		a=get<0>(t);
+		b=get<1>(t);
+		c=get<2>(t);
+		d=get<3>(t);
+	}
 	int value()const{
 		return a*a+b*b+c*c+d*d;
 	}
@@ -53,7 +61,6 @@ struct four{
 		a=na,b=nb,c=nc,d=nd;
 	}
 };
-four solve[80000];
 bool sieve[N];
 vector<int> prime;
 void linear_sieve(){//O(N) sieve prime
@@ -70,48 +77,51 @@ ostream& operator<<(ostream& out,four &f){
 	out<<f.a<<' '<<f.b<<' '<<f.c<<' '<<f.d;
 	return out;
 }
+bool done[100000];
+four solve[100000];
+four get(int i){//p is index of a prime
+	if(done[i])return solve[i];
+	int p=prime[i];
+	if(p==2)return four(make_tuple(1,1,0,0));
+	int x,y;
+	bool find=0;
+	for(x=0;2*x<=p-1;++x){
+		for(y=0;2*y<=p-1;++y){
+			if((1+x*x+y*y)%p==0){
+				find=1;
+				break;
+			}
+		}
+		if(find)break;
+	}
+	int m=(1+x*x+y*y)/p;
+	four a,yy,zz;
+	a.a=1,a.b=x,a.c=y,a.d=0;
+	while(m>1){
+		if(!(m&1)){
+			a.divide2();
+			m/=2;
+		}else{
+			yy.a=a.a%m;if(yy.a>m/2)yy.a-=m;
+			yy.b=a.b%m;if(yy.b>m/2)yy.b-=m;
+			yy.c=a.c%m;if(yy.c>m/2)yy.c-=m;
+			yy.d=a.d%m;if(yy.d>m/2)yy.d-=m;
+			zz=yy*a;
+			zz/=m;
+			zz.abs();
+			a=zz;
+			m=(a.value())/p;
+		}
+	}
+	solve[i]=a;
+	done[i]=1;
+	return a;
+}
 int main(){
 	cout<<"max prime range?(0 means MAX N)\n";
 	cin>>n;
 	if(!n)n=N;
 	linear_sieve();
-	solve[0].a=1;
-	solve[0].b=1;
-	for(unsigned i=0;i<prime.size();++i){
-		int p=prime[i];
-		if(p==2)continue;
-		int x,y;
-		bool find=0;
-		for(x=0;2*x<=p-1;++x){
-			for(y=0;2*y<=p-1;++y){
-				if((1+x*x+y*y)%p==0){
-					find=1;
-					break;
-				}
-			}
-			if(find)break;
-		}
-		int m=(1+x*x+y*y)/p;
-		four a,yy,zz;
-		a.a=1,a.b=x,a.c=y,a.d=0;
-		while(m>1){
-			if(!(m&1)){
-				a.divide2();
-				m/=2;
-			}else{
-				yy.a=a.a%m;if(yy.a>m/2)yy.a-=m;
-				yy.b=a.b%m;if(yy.b>m/2)yy.b-=m;
-				yy.c=a.c%m;if(yy.c>m/2)yy.c-=m;
-				yy.d=a.d%m;if(yy.d>m/2)yy.d-=m;
-				zz=yy*a;
-				zz/=m;
-				zz.abs();
-				a=zz;
-				m=(a.value())/p;
-			}
-		}
-		solve[i]=a;
-	}
 	int q;
 	cout<<"How many quests?\n";
 	cin>>q;
@@ -119,12 +129,13 @@ int main(){
 		int a;
 		size_t p=0;//p is index of prime;
 		cin>>a;
-		four ans;
+		four ans,fp;
 		ans.a=1;
 		while(a>1){
 			while(p<prime.size()&&a%prime[p])p++;
 			if(p>=prime.size())break;
-			ans*=solve[p];
+			fp=get(p);
+			ans*=fp;
 			ans.abs();
 			a/=prime[p];
 		}
