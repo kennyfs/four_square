@@ -1,42 +1,36 @@
 #include <iostream>
 #include <tuple>
 #include <vector>
-#define int long long
-#define tii tuple<int,int,int,int>
 using namespace std;
 const int N=100000000;
 int n;
-int my_abs(int a){//絕對值
+long long my_abs(long long a){//絕對值
 	return (a>0)?a:-a;
 }
 struct four{
-	int a,b,c,d;
-	bool ok;
+	long long a,b,c,d;
 	four():a(0),b(0),c(0),d(0){}
-	four(tii t){//用tii初始化一個four
+	four(tuple<int,int,int,int> t){//用tuple<int,int,int,int>初始化一個four
 		a=get<0>(t);
 		b=get<1>(t);
 		c=get<2>(t);
 		d=get<3>(t);
 	}
-	int value()const{//以存的a,b,c,d值算出a^2+b^2+c^2+d^2
+	long long value()const{//以存的a,b,c,d值算出a^2+b^2+c^2+d^2
 		return a*a+b*b+c*c+d*d;
-	}
-	void check(int n){//測試
-		ok=(this->value()==n);
 	}
 	void operator=(four f){//複製一個four
 		a=f.a;b=f.b;c=f.c;d=f.d;
 	}
 	four operator*(four& f){//利用尤拉恆等式，回傳值為value等於自己的value*f的value的four
 		four ans;
-		ans.a=a*f.a+b*f.b+c*f.c+d*f.d;
+		ans.a=a*f.a+b*f.b+c*f.c+d*f.d;//z=x*y
 		ans.b=a*f.b-b*f.a+c*f.d-d*f.c;
 		ans.c=a*f.c-c*f.a+d*f.b-b*f.d;
 		ans.d=a*f.d-d*f.a+b*f.c-c*f.b;
 		return ans;
 	}
-	four operator%(int& m){//把a,b,c,d都設為除以m的餘數
+	four operator%(long long& m){//把a,b,c,d都設為除以m的餘數
 		four ans;
 		ans.a=a%m;
 		ans.b=b%m;
@@ -44,7 +38,7 @@ struct four{
 		ans.d=d%m;
 		return ans;
 	}
-	void minus_m(int& m){//把原本0～m-1的餘數變成(-m+1)/2~(m-1)/2
+	void minus_m(long long& m){//把原本0～m-1的餘數變成(-m+1)/2~(m-1)/2
 		if(a>m/2)a-=m;
 		if(b>m/2)b-=m;
 		if(c>m/2)c-=m;
@@ -54,7 +48,7 @@ struct four{
 		four ans=(*this)*f;
 		*this=ans;
 	}
-	void operator/=(int& m){//把a,b,c,d都除以m
+	void operator/=(long long& m){//把a,b,c,d都除以m
 		a/=m;b/=m;c/=m;d/=m;
 	}
 	void abs(){//把a,b,c,d設為絕對值a,b,c,d，不影響平方和，也比較好看
@@ -64,7 +58,7 @@ struct four{
 		d=my_abs(d);
 	}
 	void divide2(){//value是偶數，把value除以2
-		int na,nb,nc,nd;
+		long long na,nb,nc,nd;
 		if(a%2!=b%2){
 			if(a%2==c%2)swap(b,c);
 			else if(a%2==d%2)swap(b,d);
@@ -102,7 +96,7 @@ four get(int i){//算質數的four
 	if(done[i])return solve[i];//做過就回傳原本的值
 	int p=prime[i];
 	if(p==2)return four(make_tuple(1,1,0,0));//直接回傳
-	int x,y;
+	long long x,y;
 	bool find=0;
 	for(x=0;2*x<=p-1;++x){//暴力O(p^2)算出x,y，使得1^2+x^2+y^2是p的倍數
 		for(y=0;2*y<=p-1;++y){
@@ -112,8 +106,8 @@ four get(int i){//算質數的four
 			}
 		}
 		if(find)break;
-	}
-	int m=(1+x*x+y*y)/p;//用x,y算出m
+	}//1+x^2+y^2=mp
+	long long m=(1+x*x+y*y)/p;//用x,y算出m
 	four ans,yy,zz;//ans為答案（一直更新），yy、zz是暫存值
 	ans.a=1,ans.b=x,ans.c=y,ans.d=0;
 	while(m>1){//O(m) 屬於 O(p)
@@ -135,7 +129,7 @@ four get(int i){//算質數的four
 	done[i]=1;
 	return ans;
 }
-main(){
+int main(){
 	cout<<"max prime range?(0 means MAX N)\n";
 	cin>>n;
 	if(!n)n=N;
@@ -144,7 +138,7 @@ main(){
 	cout<<"How many quests?\n";
 	cin>>q;
 	while(q--){
-		int a;
+		long long a;
 		size_t p=0;//p是prime的序號
 		cin>>a;//輸入
 		four ans,fp;
@@ -154,7 +148,7 @@ main(){
 			//看所有的質數，如果整除就除，除到不能除為止，然後跳到下一個質數
 			while(p<prime.size()&&a%prime[p])p++;
 			if(p>=prime.size()){cout<<"too big error\n";err=1;break;}
-			//如果列表內的質數都不行整除p，代表列表範圍不夠大，無法做
+			//如果列表內的質數都不行整除p，代表列表範圍不夠大，無法做，暫時不做動態擴增質數，因為太大的質數複雜度一樣會太大
 			fp=get(p);
 			ans*=fp;//*=是用參考傳入，所以要先存在fp裡
 			ans.abs();
